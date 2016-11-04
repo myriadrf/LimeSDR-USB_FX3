@@ -14379,25 +14379,25 @@ OUTPUT(LimeSDR-USB_fx3_fw.elf elf32-littlearm)
  .debug_line    0x00001866       0x58 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_initialize_low_level.o)
  .debug_line    0x000018be       0x68 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_stack_build.o)
 
-.debug_info     0x00000000     0x459d
- .debug_info    0x00000000       0x7c ./cyfx_gcc_startup.o
- .debug_info    0x0000007c     0x23ba ./main.o
- .debug_info    0x00002436      0xcee ./rtos_threadx.o
- .debug_info    0x00003124      0x8c8 ./spi_flash_lib.o
- .debug_info    0x000039ec      0x2d5 ./usb_descriptors.o
- .debug_info    0x00003cc1       0xa4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3entry_armcc.o)
- .debug_info    0x00003d65       0xa4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3entry_armcc.o)
- .debug_info    0x00003e09       0x9c C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3mmu.o)
- .debug_info    0x00003ea5       0xa4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3isr_armcc.o)
- .debug_info    0x00003f49       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_system_return.o)
- .debug_info    0x00003ffd       0xb0 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_schedule.o)
- .debug_info    0x000040ad       0xbc C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_vectored_context_save.o)
- .debug_info    0x00004169       0xb0 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_timer_interrupt.o)
- .debug_info    0x00004219       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_context_restore.o)
- .debug_info    0x000042cd       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_irq_nesting_end.o)
- .debug_info    0x00004381       0xb8 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_irq_nesting_start.o)
- .debug_info    0x00004439       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_initialize_low_level.o)
- .debug_info    0x000044ed       0xb0 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_stack_build.o)
+.debug_info     0x00000000     0x4599
+ .debug_info    0x00000000       0x78 ./cyfx_gcc_startup.o
+ .debug_info    0x00000078     0x23ba ./main.o
+ .debug_info    0x00002432      0xcee ./rtos_threadx.o
+ .debug_info    0x00003120      0x8c8 ./spi_flash_lib.o
+ .debug_info    0x000039e8      0x2d5 ./usb_descriptors.o
+ .debug_info    0x00003cbd       0xa4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3entry_armcc.o)
+ .debug_info    0x00003d61       0xa4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3entry_armcc.o)
+ .debug_info    0x00003e05       0x9c C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3mmu.o)
+ .debug_info    0x00003ea1       0xa4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyfxapi.a(cyu3isr_armcc.o)
+ .debug_info    0x00003f45       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_system_return.o)
+ .debug_info    0x00003ff9       0xb0 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_schedule.o)
+ .debug_info    0x000040a9       0xbc C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_vectored_context_save.o)
+ .debug_info    0x00004165       0xb0 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_timer_interrupt.o)
+ .debug_info    0x00004215       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_context_restore.o)
+ .debug_info    0x000042c9       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_irq_nesting_end.o)
+ .debug_info    0x0000437d       0xb8 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_irq_nesting_start.o)
+ .debug_info    0x00004435       0xb4 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_initialize_low_level.o)
+ .debug_info    0x000044e9       0xb0 C:\Program Files (x86)\Cypress\EZ-USB FX3 SDK\1.3\\firmware\u3p_firmware\lib\fx3_debug\cyu3threadx.a(tx_thread_stack_build.o)
 
 .debug_abbrev   0x00000000      0x6c1
  .debug_abbrev  0x00000000       0x14 ./cyfx_gcc_startup.o
@@ -14425,15 +14425,15 @@ OUTPUT(LimeSDR-USB_fx3_fw.elf elf32-littlearm)
  .debug_loc     0x00000420      0x2c0 ./rtos_threadx.o
  .debug_loc     0x000006e0      0x1b8 ./spi_flash_lib.o
 
-.debug_str      0x00000000     0x3a51
- .debug_str     0x00000000     0x33d2 ./main.o
-                               0x3454 (size before relaxing)
- .debug_str     0x000033d2      0x343 ./rtos_threadx.o
-                               0x1432 (size before relaxing)
- .debug_str     0x00003715      0x12d ./spi_flash_lib.o
-                                0xf15 (size before relaxing)
- .debug_str     0x00003842      0x20f ./usb_descriptors.o
-                                0x473 (size before relaxing)
+.debug_str      0x00000000     0x3a4d
+ .debug_str     0x00000000     0x33ce ./main.o
+                               0x3450 (size before relaxing)
+ .debug_str     0x000033ce      0x343 ./rtos_threadx.o
+                               0x142e (size before relaxing)
+ .debug_str     0x00003711      0x12d ./spi_flash_lib.o
+                                0xf11 (size before relaxing)
+ .debug_str     0x0000383e      0x20f ./usb_descriptors.o
+                                0x46f (size before relaxing)
 
 .debug_frame    0x00000000     0x13a4
  .debug_frame   0x00000000      0x308 ./main.o

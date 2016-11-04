@@ -1,1 +1,1 @@
-Myriad-RF LimeSDR-USB 1.4 firmware
+Myriad-RF LimeSDR-USB v1.4 firmware
