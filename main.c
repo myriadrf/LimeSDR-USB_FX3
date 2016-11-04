@@ -2,7 +2,7 @@
  * ----------------------------------------------------------------------------
  * FILE:	main.c
  * DESCRIPTION:	LimeSDR-USB firmware main file
- * DATE:	2016.10.27
+ * DATE:	2016.11.04
  * AUTHOR(s):	Lime Microsystems
  * REVISION: v0r3
  * ----------------------------------------------------------------------------
@@ -56,7 +56,7 @@
 #define MAX_MCU_RETRIES	30
 
 //FX3_LED control
-#define LED_WINK_PERIOD		18
+#define LED_WINK_PERIOD		20
 #define LED_BLINK1_PERIOD	20
 #define LED_BLINK2_PERIOD	10
 
@@ -146,8 +146,7 @@ CyU3PReturnStatus_t CyFxI2cInit ()
 /* This function starts the slave FIFO loop application. This is called
  * when a SET_CONF event is received from the USB host. The endpoints
  * are configured and the DMA pipe is setup in this function. */
-void
-CyFxSlFifoApplnStart (void)
+void CyFxSlFifoApplnStart (void)
 {
 	uint16_t size = 0;
 	CyU3PEpConfig_t epCfg;
@@ -327,8 +326,7 @@ CyFxSlFifoApplnStart (void)
 /* This function stops the slave FIFO loop application. This shall be called
  * whenever a RESET or DISCONNECT event is received from the USB host. The
  * endpoints are disabled and the DMA pipe is destroyed by this function. */
-void
-CyFxSlFifoApplnStop (void)
+void CyFxSlFifoApplnStop (void)
 {
 	CyU3PEpConfig_t epCfg;
 	CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
@@ -1812,8 +1810,7 @@ void CyFxSlFifoApplnInit (void)
 }
 
 /* Entry function for the slFifoAppThread. */
-void
-SlFifoAppThread_Entry (uint32_t input)
+void SlFifoAppThread_Entry (uint32_t input)
 {
 	CyU3PDmaState_t state;
 	uint32_t USB_BULK_STREAM_DMA_UtoP_Count, USB_BULK_STREAM_DMA_UtoP_Count_old, USB_BULK_STREAM_DMA_PtoU_Count, USB_BULK_STREAM_DMA_PtoU_Count_old, consXferCount;
@@ -1889,9 +1886,7 @@ SlFifoAppThread_Entry (uint32_t input)
 }
 
 /* Application define function which creates the threads. */
-void
-CyFxApplicationDefine (
-    void)
+void CyFxApplicationDefine (void)
 {
 	void *ptr = NULL;
 	uint32_t retThrdCreate = CY_U3P_SUCCESS;
@@ -1928,8 +1923,7 @@ CyFxApplicationDefine (
 /*
  * Main function
  */
-int
-main (void)
+int main (void)
 {
 	CyU3PIoMatrixConfig_t io_cfg;
 	CyU3PReturnStatus_t status = CY_U3P_SUCCESS;
