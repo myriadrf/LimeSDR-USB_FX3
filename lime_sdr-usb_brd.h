@@ -15,7 +15,7 @@
 
 //get info
 #define DEV_TYPE			LMS_DEV_LIMESDR_USB
-#define HW_VER				2 //LimeSDR-USB 1.2
+#define HW_VER				1 //LimeSDR-USB v1.1
 #define EXP_BOARD			EXP_BOARD_UNSUPPORTED
 
 //I2C devices

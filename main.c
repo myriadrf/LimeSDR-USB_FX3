@@ -2,7 +2,7 @@
  * ----------------------------------------------------------------------------
  * FILE:	main.c
  * DESCRIPTION:	LimeSDR-USB firmware main file
- * DATE:	2016.10.27
+ * DATE:	2016.11.04
  * AUTHOR(s):	Lime Microsystems
  * REVISION: v0r3
  * ----------------------------------------------------------------------------
@@ -36,7 +36,7 @@
 #include "Si5351_config_map.h"
 
 //GET_INFO FW_VER
-#define FW_VER				2
+#define FW_VER				6
 
 #define sbi(p,n) ((p) |= (1UL << (n)))
 #define cbi(p,n) ((p) &= ~(1 << (n)))
@@ -56,7 +56,7 @@
 #define MAX_MCU_RETRIES	30
 
 //FX3_LED control
-#define LED_WINK_PERIOD		18
+#define LED_WINK_PERIOD		20
 #define LED_BLINK1_PERIOD	20
 #define LED_BLINK2_PERIOD	10
 
@@ -1812,8 +1812,7 @@ void CyFxSlFifoApplnInit (void)
 }
 
 /* Entry function for the slFifoAppThread. */
-void
-SlFifoAppThread_Entry (uint32_t input)
+void SlFifoAppThread_Entry (uint32_t input)
 {
 	CyU3PDmaState_t state;
 	uint32_t USB_BULK_STREAM_DMA_UtoP_Count, USB_BULK_STREAM_DMA_UtoP_Count_old, USB_BULK_STREAM_DMA_PtoU_Count, USB_BULK_STREAM_DMA_PtoU_Count_old, consXferCount;
@@ -1890,8 +1889,7 @@ SlFifoAppThread_Entry (uint32_t input)
 
 /* Application define function which creates the threads. */
 void
-CyFxApplicationDefine (
-    void)
+CyFxApplicationDefine (void)
 {
 	void *ptr = NULL;
 	uint32_t retThrdCreate = CY_U3P_SUCCESS;
@@ -1928,8 +1926,7 @@ CyFxApplicationDefine (
 /*
  * Main function
  */
-int
-main (void)
+int main (void)
 {
 	CyU3PIoMatrixConfig_t io_cfg;
 	CyU3PReturnStatus_t status = CY_U3P_SUCCESS;
@@ -2172,8 +2169,6 @@ void Control_TCXO_DAC (unsigned char oe, unsigned char *data) //controls DAC (AD
 	uint8_t   I2C_Addr;
 	unsigned char DAC_data[2];
 
-	Modify_BRDSPI16_Reg_bits (FPGA_SPI_REG_SS_CTRL, TCXO_DAC_SS, TCXO_DAC_SS, 0); //select
-
 	if (oe == 0) //set DAC out to three-state
 	{
 		DAC_data[0] = 0xC0; //POWER-DOWN MODE = THREE-STATE (MSB bits = 11) + MSB data
@@ -2194,7 +2189,7 @@ void Control_TCXO_DAC (unsigned char oe, unsigned char *data) //controls DAC (AD
 
 		preamble.length    = 2;
 		preamble.buffer[0] = I2C_Addr;
-		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;
+		preamble.buffer[1] = BRDG_SPI_DAC_SS;
 		preamble.ctrlMask  = 0x0000;
 
 		if( CyU3PI2cTransmitBytes (&preamble, &DAC_data[0], 2, 0) != CY_U3P_SUCCESS)  cmd_errors++;
@@ -2221,15 +2216,13 @@ void Control_TCXO_DAC (unsigned char oe, unsigned char *data) //controls DAC (AD
 
 		preamble.length    = 2;
 		preamble.buffer[0] = I2C_Addr;
-		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;
+		preamble.buffer[1] = BRDG_SPI_DAC_SS;
 		preamble.ctrlMask  = 0x0000;
 
 		if( CyU3PI2cTransmitBytes (&preamble, &DAC_data[0], 2, 0) != CY_U3P_SUCCESS)  cmd_errors++;
 
 		Wait_till_SC18B20_busy ();
 	}
-
-	Modify_BRDSPI16_Reg_bits (FPGA_SPI_REG_SS_CTRL, TCXO_DAC_SS, TCXO_DAC_SS, 1); //deselect
 }
 
 /**
@@ -2263,7 +2256,6 @@ void Control_TCXO_ADF (unsigned char oe, unsigned char *data) //controls ADF4002
 		//write data to ADF
 		for(ADF_block = 0; ADF_block < 4; ADF_block++)
 		{
-			Modify_BRDSPI16_Reg_bits (FPGA_SPI_REG_SS_CTRL, TCXO_ADF_SS, TCXO_ADF_SS, 0); //Select ADF
 
 			I2C_Addr = I2C_ADDR_SC18IS602B;
 
@@ -2282,19 +2274,16 @@ void Control_TCXO_ADF (unsigned char oe, unsigned char *data) //controls ADF4002
 			//write byte
 			preamble.length    = 2;
 			preamble.buffer[0] = I2C_Addr;
-			preamble.buffer[1] = BRDG_SPI_DUMMY_SS;
+			preamble.buffer[1] = BRDG_SPI_ADF_SS;
 			preamble.ctrlMask  = 0x0000;
 
 			if( CyU3PI2cTransmitBytes (&preamble, &ADF_data[ADF_block*3], 3, 0) != CY_U3P_SUCCESS)  cmd_errors++;
 
 			Wait_till_SC18B20_busy ();
-
-			Modify_BRDSPI16_Reg_bits (FPGA_SPI_REG_SS_CTRL, TCXO_ADF_SS, TCXO_ADF_SS, 1); //Deselect ADF
 		}
 	}
 	else //set PLL parameters, 4 blocks must be written
 	{
-		Modify_BRDSPI16_Reg_bits (FPGA_SPI_REG_SS_CTRL, TCXO_ADF_SS, TCXO_ADF_SS, 0); //Select ADF
 
 		Reconfigure_SPI_for_LMS();
 
@@ -2315,14 +2304,12 @@ void Control_TCXO_ADF (unsigned char oe, unsigned char *data) //controls ADF4002
 		//write byte
 		preamble.length    = 2;
 		preamble.buffer[0] = I2C_Addr;
-		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;
+		preamble.buffer[1] = BRDG_SPI_ADF_SS;
 		preamble.ctrlMask  = 0x0000;
 
 		if( CyU3PI2cTransmitBytes (&preamble, data, 3, 0) != CY_U3P_SUCCESS)  cmd_errors++;
 
 		Wait_till_SC18B20_busy ();
-
-		Modify_BRDSPI16_Reg_bits (FPGA_SPI_REG_SS_CTRL, TCXO_ADF_SS, TCXO_ADF_SS, 1); //Deselect ADF
 	}
 }
 
