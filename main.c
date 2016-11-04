@@ -55,6 +55,14 @@
 
 #define MAX_MCU_RETRIES	30
 
+//FX3_LED control
+#define LED_WINK_PERIOD		18
+#define LED_BLINK1_PERIOD	20
+#define LED_BLINK2_PERIOD	10
+
+enum {LED_MODE_OFF, LED_MODE_ON, LED_MODE_WINK};
+unsigned char flash_page_data[FLASH_PAGE_SIZE], LED_mode = {LED_MODE_OFF}, LED_timeout;
+
 //USB serial number from FX3 die id
 static const char hex_digit[16] = "0123456789ABCDEF";
 static uint32_t *EFUSE_DIE_ID = ((uint32_t *)0xE0055010);
@@ -95,6 +103,7 @@ void Wait_till_SC18B20_busy (void);
 void Reconfigure_SPI_for_LMS (void);
 void Reconfigure_SPI_for_Flash (void);
 void GPIO_configuration (void);
+void Set_LED_mode (unsigned char mode);
 
 /* Application Error Handler */
 void CyFxAppErrorHandler (CyU3PReturnStatus_t apiRetStatus )   /* API return status */
@@ -416,15 +425,13 @@ CyBool_t CyFxSlFifoApplnUSBSetupCB (uint32_t setupdat0, uint32_t setupdat1)
 		{
 
 			case 0xC0: //read
-				CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyTrue); //FX3 is busy
-				CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyFalse); //FX3 is not busy
+				Set_LED_mode (LED_MODE_WINK);
 				CyU3PUsbSendEP0Data (64, glEp0Buffer_Tx);
 				if(need_fx3_reset) CyU3PDeviceReset(CyFalse); //hard fx3 reset
 				break;
 
 			case 0xC1: //write
-
-				CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyTrue); //indicate busy
+				Set_LED_mode (LED_MODE_ON); //FX3 is busy
 				CyU3PUsbGetEP0Data (64, glEp0Buffer_Rx, NULL);
 
 				// LMS64C protocol
@@ -1560,7 +1567,7 @@ BOOTING:
 						break;
 				}
 
-				CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyFalse); //FX3 is not busy
+				Set_LED_mode (LED_MODE_WINK);
 				break;
 
 			default:
@@ -1609,8 +1616,7 @@ void CyFxSlFifoApplnUSBEventCB (CyU3PUsbEventType_t evtype, uint16_t evdata)
 		default:
 			break;
 	}
-	CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyTrue); //FX3 is busy
-	CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyFalse); //FX3 is not busy
+	Set_LED_mode (LED_MODE_WINK);
 }
 
 /* Callback function to handle LPM requests from the USB 3.0 host. This function is invoked by the API
@@ -1807,16 +1813,19 @@ void CyFxSlFifoApplnInit (void)
 
 /* Entry function for the slFifoAppThread. */
 void
-SlFifoAppThread_Entry (
-    uint32_t input)
+SlFifoAppThread_Entry (uint32_t input)
 {
+	CyU3PDmaState_t state;
+	uint32_t USB_BULK_STREAM_DMA_UtoP_Count, USB_BULK_STREAM_DMA_UtoP_Count_old, USB_BULK_STREAM_DMA_PtoU_Count, USB_BULK_STREAM_DMA_PtoU_Count_old, consXferCount;
+	uint32_t USB_BULK_CONTROL_DMA_UtoP_Count, USB_BULK_CONTROL_DMA_UtoP_Count_old, USB_BULK_CONTROL_DMA_PtoU_Count, USB_BULK_CONTROL_DMA_PtoU_Count_old;
+
 	CyFxI2cInit ();
 	//CyU3PSpiInit(); //impossible to use spi in 32 bit GPIF mode
 
 	/* Initialize the slave FIFO application */
 	CyFxSlFifoApplnInit();
 
-	CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyTrue); //FX3 is busy
+	Set_LED_mode (LED_MODE_ON); //FX3 is busy
 
 	Configure_Si5351();
 
@@ -1829,11 +1838,53 @@ SlFifoAppThread_Entry (
 
 	Configure_LM75 (); //set LM75 configuration
 
-	CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyFalse); //FX3 is not busy
+	Set_LED_mode (LED_MODE_WINK);
 
 	for (;;)
 	{
-		CyU3PThreadSleep (100);
+		CyU3PThreadSleep (10);
+
+		if (LED_mode != LED_MODE_OFF)
+		{
+			if (LED_timeout) LED_timeout--;
+
+			if(LED_timeout == 0)
+			{
+				switch(LED_mode)
+				{
+					case LED_MODE_WINK:
+						//CyU3PGpioSimpleSetValue (LED_GPIO, CyFalse); //turn off led
+						CyU3PGpioSimpleSetValue (FX3_LED_R, CyFalse);
+						CyU3PGpioSimpleSetValue (FX3_LED_G, CyTrue);
+
+						LED_mode= LED_MODE_OFF;
+						break;
+
+					case LED_MODE_ON:
+						break;
+
+					default:
+					case LED_MODE_OFF:
+						break;
+				}
+			}
+		}
+
+		//detecting USB streams in both directions and indicate this
+		USB_BULK_STREAM_DMA_UtoP_Count_old = USB_BULK_STREAM_DMA_UtoP_Count;
+		USB_BULK_STREAM_DMA_PtoU_Count_old = USB_BULK_STREAM_DMA_PtoU_Count;
+
+		USB_BULK_CONTROL_DMA_UtoP_Count_old = USB_BULK_CONTROL_DMA_UtoP_Count;
+		USB_BULK_CONTROL_DMA_PtoU_Count_old = USB_BULK_CONTROL_DMA_PtoU_Count;
+
+        CyU3PDmaChannelGetStatus(&USB_BULK_STREAM_DMA_UtoP_Handle, &state, &USB_BULK_STREAM_DMA_UtoP_Count, &consXferCount);
+        CyU3PDmaChannelGetStatus(&USB_BULK_STREAM_DMA_PtoU_Handle, &state, &USB_BULK_STREAM_DMA_PtoU_Count, &consXferCount);
+
+        CyU3PDmaChannelGetStatus(&USB_BULK_CONTROL_DMA_UtoP_Handle, &state, &USB_BULK_CONTROL_DMA_UtoP_Count, &consXferCount);
+        CyU3PDmaChannelGetStatus(&USB_BULK_CONTROL_DMA_PtoU_Handle, &state, &USB_BULK_CONTROL_DMA_PtoU_Count, &consXferCount);
+
+        if ((USB_BULK_STREAM_DMA_UtoP_Count != USB_BULK_STREAM_DMA_UtoP_Count_old) || (USB_BULK_STREAM_DMA_PtoU_Count != USB_BULK_STREAM_DMA_PtoU_Count_old)) if (LED_mode != LED_MODE_ON) Set_LED_mode (LED_MODE_WINK);
+        if ((USB_BULK_CONTROL_DMA_UtoP_Count != USB_BULK_CONTROL_DMA_UtoP_Count_old) || (USB_BULK_CONTROL_DMA_PtoU_Count != USB_BULK_CONTROL_DMA_PtoU_Count_old)) if (LED_mode != LED_MODE_ON) Set_LED_mode (LED_MODE_WINK);
 	}
 }
 
@@ -2535,4 +2586,48 @@ void GPIO_configuration (void)
 	gpioConfig.intrMode = CY_U3P_GPIO_NO_INTR;
 	CyU3PDeviceGpioOverride (BRDG_INT, CyTrue);
 	CyU3PGpioSetSimpleConfig(BRDG_INT, &gpioConfig);
+
+	gpioConfig.outValue = CyFalse;
+	gpioConfig.inputEn = CyFalse;
+	gpioConfig.driveLowEn = CyTrue;
+	gpioConfig.driveHighEn = CyTrue;
+	gpioConfig.intrMode = CY_U3P_GPIO_NO_INTR;
+	CyU3PDeviceGpioOverride (FX3_LED_R, CyTrue);
+	CyU3PGpioSetSimpleConfig(FX3_LED_R, &gpioConfig);
+
+	gpioConfig.outValue = CyTrue;
+	gpioConfig.inputEn = CyFalse;
+	gpioConfig.driveLowEn = CyTrue;
+	gpioConfig.driveHighEn = CyTrue;
+	gpioConfig.intrMode = CY_U3P_GPIO_NO_INTR;
+	CyU3PDeviceGpioOverride (FX3_LED_G, CyTrue);
+	CyU3PGpioSetSimpleConfig(FX3_LED_G, &gpioConfig);
+}
+
+/**	Function to control FX3 LED mode. */
+void Set_LED_mode (unsigned char mode)
+{
+	LED_mode = mode;//save new LED mode
+
+	switch (LED_mode)
+	{
+		case LED_MODE_OFF:
+			//CyU3PGpioSimpleSetValue (LED_GPIO, CyFalse); //turn off led
+			CyU3PGpioSimpleSetValue (FX3_LED_R, CyFalse);
+			CyU3PGpioSimpleSetValue (FX3_LED_G, CyTrue);
+			break;
+
+		case LED_MODE_ON:
+			//CyU3PGpioSimpleSetValue (LED_GPIO, CyTrue); //turn on led
+			CyU3PGpioSimpleSetValue (FX3_LED_R, CyTrue);
+			CyU3PGpioSimpleSetValue (FX3_LED_G, CyFalse);
+			break;
+
+		case LED_MODE_WINK:
+			//CyU3PGpioSimpleSetValue (LED_GPIO, CyTrue); //turn on led
+			CyU3PGpioSimpleSetValue (FX3_LED_R, CyTrue);
+			CyU3PGpioSimpleSetValue (FX3_LED_G, CyFalse);
+			LED_timeout = LED_WINK_PERIOD; //set LED timeout
+			break;
+	}
 }

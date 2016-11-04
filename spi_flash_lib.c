@@ -78,42 +78,115 @@ CyU3PReturnStatus_t FlashSpiDeInit() {
 CyU3PReturnStatus_t CyFxSpiWaitForStatus(void)
 {
     uint8_t buf[2], rd_buf[2];
-    CyU3PReturnStatus_t status = CY_U3P_SUCCESS;
-
-    uint32_t start_ticks = CyU3PGetTime();
+    //CyU3PReturnStatus_t status = CY_U3P_SUCCESS;
 
     /* Wait for status response from SPI flash device. */
     do {
-		if ((CyU3PGetTime()- start_ticks) > FLASH_STATUS_TIMEOUT)
-		{
-			status = CY_U3P_ERROR_TIMEOUT;
-			return status;
-		}
+        buf[0] = 0x06;  /* Write enable command. */
 
-    	buf[0] = 0x06;  /* Write enable command. */
-
-    	CyU3PGpioSetValue (FX3_SPI_AS_SS, CyFalse);
+        /*CyU3PGpioSetValue (FX3_FLASH2_SNN, CyFalse);//CyU3PSpiSetSsnLine(CyFalse);
         status = CyU3PSpiTransmitWords (buf, 1);
-        CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
-        if (status != CY_U3P_SUCCESS) { //SPI WR_ENABLE command failed
+        CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
+        if (status != CY_U3P_SUCCESS) {
+            CyU3PDebugPrint (2, "SPI WR_ENABLE command failed\n\r");
             return status;
-        }
+        }*/
+
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x40; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 0,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+        ///CyU3PThreadSleep (1);
+
+		//write-read SPI bytes using using I2C-SPI bridge
+		I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+		preamble.length    = 2;
+		preamble.buffer[0] = I2C_Addr; //write h70;
+		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+		preamble.ctrlMask  = 0x0000;
+
+		if( CyU3PI2cTransmitBytes (&preamble, &buf[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+		CyU3PThreadSleep (1);
+
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x41; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 1,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+		///CyU3PThreadSleep (1);
 
         buf[0] = 0x05;  /* Read status command */
 
-        CyU3PGpioSetValue (FX3_SPI_AS_SS, CyFalse);
+        /*CyU3PGpioSetValue (FX3_FLASH2_SNN, CyFalse);//CyU3PSpiSetSsnLine(CyFalse);
         status = CyU3PSpiTransmitWords(buf, 1);
-        if (status != CY_U3P_SUCCESS) { //SPI READ_STATUS command failed
-            CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+        if (status != CY_U3P_SUCCESS) {
+            CyU3PDebugPrint(2, "SPI READ_STATUS command failed\n\r");
+            CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
             return status;
         }
 
         status = CyU3PSpiReceiveWords(rd_buf, 2);
-        CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
-
-        if(status != CY_U3P_SUCCESS) { //SPI status read failed
+        CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
+        if(status != CY_U3P_SUCCESS) {
+            CyU3PDebugPrint(2, "SPI status read failed\n\r");
             return status;
-        }
+        }*/
+
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x40; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 0,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+        ///CyU3PThreadSleep (1);
+
+
+		//write/read SPI bytes using using I2C-SPI bridge
+		I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+		preamble.length    = 2;
+		preamble.buffer[0] = I2C_Addr; //write h70;
+		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+		preamble.ctrlMask  = 0x0000;
+
+		sc_brdg_data[0] = buf[0];
+		sc_brdg_data[1] = 0; //dummy byte for read
+		sc_brdg_data[2] = 0; //dummy byte for read
+
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1 + 2, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+		CyU3PThreadSleep (1);
+
+		//read received SPI bytes from I2C-SPI bridge buffer
+		I2C_Addr |= 1 << 0;	//read addr
+		preamble.length    = 1;
+		preamble.buffer[0] = I2C_Addr;
+		preamble.ctrlMask  = 0x0000;
+
+		if( CyU3PI2cReceiveBytes (&preamble, &sc_brdg_data[0], 1 + 2, 0)  != CY_U3P_SUCCESS)  cmd_errors++;
+
+		CyU3PThreadSleep (1);
+
+		rd_buf[0] = sc_brdg_data[1];
+		rd_buf[1] = sc_brdg_data[2];
+
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x41; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 1,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+		///CyU3PThreadSleep (1);
+
 
     } while ((rd_buf[0] & 1) || (!(rd_buf[0] & 0x2)));
 
@@ -159,21 +232,105 @@ CyU3PReturnStatus_t FlashSpiTransfer(uint16_t pageAddress, uint16_t byteCount, u
                     return status;
             }
 
-            CyU3PGpioSetValue (FX3_SPI_AS_SS, CyFalse);
+            /*
+            CyU3PGpioSetValue (FX3_FLASH2_SNN, CyFalse);//CyU3PSpiSetSsnLine(CyFalse);
             status = CyU3PSpiTransmitWords(location, 4);
 
-            if (status != CY_U3P_SUCCESS) { //SPI READ command failed
-                CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+            if (status != CY_U3P_SUCCESS) {
+                CyU3PDebugPrint (2, "SPI READ command failed\r\n");
+                CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine (CyTrue);
                 return status;
             }
 
             status = CyU3PSpiReceiveWords(buffer, FLASH_PAGE_SIZE);
             if (status != CY_U3P_SUCCESS) {
-            	CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+            	CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
                 return status;
             }
 
-            CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+            CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
+            */
+
+			//write byte
+			preamble.length    = 1;
+			preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+			preamble.ctrlMask  = 0x0000;
+			sc_brdg_data[0] = 0x40; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 0,
+			if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+            ///CyU3PThreadSleep (1);
+
+
+        	//write-read SPI bytes using using I2C-SPI bridge
+        	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+        	preamble.length    = 2;
+        	preamble.buffer[0] = I2C_Addr; //write h70;
+        	preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+        	preamble.ctrlMask  = 0x0000;
+
+        	if( CyU3PI2cTransmitBytes (&preamble, &location[0], 4, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+        	CyU3PThreadSleep (1);
+
+
+    		memset (sc_brdg_data, 0, sizeof(sc_brdg_data)); //dummy byte for read
+
+
+    		//write/read SPI bytes using using I2C-SPI bridge
+    		I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+    		preamble.length    = 2;
+    		preamble.buffer[0] = I2C_Addr; //write h70;
+    		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+    		preamble.ctrlMask  = 0x0000;
+
+    		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], FLASH_PAGE_SIZE/2, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+    		CyU3PThreadSleep (10);
+
+    		//read received SPI bytes from I2C-SPI bridge buffer
+    		I2C_Addr |= 1 << 0;	//read addr
+    		preamble.length    = 1;
+    		preamble.buffer[0] = I2C_Addr;
+    		preamble.ctrlMask  = 0x0000;
+
+    		if( CyU3PI2cReceiveBytes (&preamble, &buffer[0 + 0], FLASH_PAGE_SIZE/2, 0)  != CY_U3P_SUCCESS)  cmd_errors++;
+
+    		CyU3PThreadSleep (1);
+
+
+
+    		//write/read SPI bytes using using I2C-SPI bridge
+    		I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+    		preamble.length    = 2;
+    		preamble.buffer[0] = I2C_Addr; //write h70;
+    		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+    		preamble.ctrlMask  = 0x0000;
+
+    		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], FLASH_PAGE_SIZE/2, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+    		CyU3PThreadSleep (10);
+
+    		//read received SPI bytes from I2C-SPI bridge buffer
+    		I2C_Addr |= 1 << 0;	//read addr
+    		preamble.length    = 1;
+    		preamble.buffer[0] = I2C_Addr;
+    		preamble.ctrlMask  = 0x0000;
+
+    		if( CyU3PI2cReceiveBytes (&preamble, &buffer[0 + FLASH_PAGE_SIZE/2], FLASH_PAGE_SIZE/2, 0)  != CY_U3P_SUCCESS)  cmd_errors++;
+
+    		CyU3PThreadSleep (1);
+
+			//write byte
+			preamble.length    = 1;
+			preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+			preamble.ctrlMask  = 0x0000;
+			sc_brdg_data[0] = 0x41; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 1,
+			if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+    		///CyU3PThreadSleep (1);
+
 
         } else { /* Write */
             location[0] = 0x02; /* Write command */
@@ -182,30 +339,109 @@ CyU3PReturnStatus_t FlashSpiTransfer(uint16_t pageAddress, uint16_t byteCount, u
             if (status != CY_U3P_SUCCESS)
                 return status;
 
-            CyU3PGpioSetValue (FX3_SPI_AS_SS, CyFalse);
-
+            /*
+            CyU3PGpioSetValue (FX3_FLASH2_SNN, CyFalse);//CyU3PSpiSetSsnLine(CyFalse);
             status = CyU3PSpiTransmitWords(location, 4);
-            if (status != CY_U3P_SUCCESS) { //SPI WRITE command failed
-                CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+            if (status != CY_U3P_SUCCESS) {
+                CyU3PDebugPrint(2, "SPI WRITE command failed\r\n");
+                CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
                 return status;
             }
-
-			#ifdef CHANGE_SPI_TO_LSB
-            Reconfigure_SPI_for_FPGA_PS ();
-			#endif
 
             status = CyU3PSpiTransmitWords(buffer, FLASH_PAGE_SIZE);
-
-			#ifdef CHANGE_SPI_TO_LSB
-            FlashSpiInit ();
-			#endif
-
             if (status != CY_U3P_SUCCESS) {
-            	CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+            	CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
                 return status;
             }
 
-            CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+            CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine(CyTrue);
+             */
+
+			//write byte
+			preamble.length    = 1;
+			preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+			preamble.ctrlMask  = 0x0000;
+			sc_brdg_data[0] = 0x40; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 0,
+			if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+            ///CyU3PThreadSleep (1);
+
+
+        	//write-read SPI bytes using using I2C-SPI bridge
+        	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+        	preamble.length    = 2;
+        	preamble.buffer[0] = I2C_Addr; //write h70;
+        	preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+        	preamble.ctrlMask  = 0x0000;
+
+        	if( CyU3PI2cTransmitBytes (&preamble, &location[0], 4, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+        	CyU3PThreadSleep (1);
+
+
+			#ifdef CHANGE_SPI_TO_LSB
+        	//write byte
+        	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+            preamble.length    = 2;
+            preamble.buffer[0] = I2C_Addr; //write h70;
+            preamble.buffer[1] = 0xF0; //reg to write = configure spi
+            preamble.buffer[2] = 0x00;
+            preamble.ctrlMask  = 0x0000;
+            data = 0x20; // LSB word first, Mode 0 (CPOL = 0, CPHA = 0), 1.843 MHz
+            if( CyU3PI2cTransmitBytes (&preamble, &data, 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+            CyU3PThreadSleep (1);
+ 			#endif
+
+
+
+        	//write-read SPI bytes using using I2C-SPI bridge
+        	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+        	preamble.length    = 2;
+        	preamble.buffer[0] = I2C_Addr; //write h70;
+        	preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+        	preamble.ctrlMask  = 0x0000;
+
+        	if( CyU3PI2cTransmitBytes (&preamble, &buffer[0 + 0], FLASH_PAGE_SIZE/2, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+        	CyU3PThreadSleep (4);
+
+
+        	//write-read SPI bytes using using I2C-SPI bridge
+        	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+        	preamble.length    = 2;
+        	preamble.buffer[0] = I2C_Addr; //write h70;
+        	preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+        	preamble.ctrlMask  = 0x0000;
+
+        	if( CyU3PI2cTransmitBytes (&preamble, &buffer[0 + FLASH_PAGE_SIZE/2], FLASH_PAGE_SIZE/2, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+        	CyU3PThreadSleep (4);
+
+
+			#ifdef CHANGE_SPI_TO_LSB
+        	//write byte
+        	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+            preamble.length    = 2;
+            preamble.buffer[0] = I2C_Addr; //write h70;
+            preamble.buffer[1] = 0xF0; //reg to write = configure spi
+            preamble.buffer[2] = 0x00;
+            preamble.ctrlMask  = 0x0000;
+            data = 0x00; // MSB word first, Mode 0 (CPOL = 0, CPHA = 0), 1.843 MHz
+            if( CyU3PI2cTransmitBytes (&preamble, &data, 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+            CyU3PThreadSleep (1);
+			#endif
+
+			//write byte
+			preamble.length    = 1;
+			preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+			preamble.ctrlMask  = 0x0000;
+			sc_brdg_data[0] = 0x41; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 1,
+			if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+    		///CyU3PThreadSleep (1);
+
         }
 
         byteAddress += FLASH_PAGE_SIZE;
@@ -228,12 +464,41 @@ CyU3PReturnStatus_t FlashSpiEraseSector(CyBool_t isErase, uint8_t sector)
 
     location[0] = 0x06;  /* Write enable. */
 
-    CyU3PGpioSetValue (FX3_SPI_AS_SS, CyFalse);
+    /*CyU3PGpioSetValue (FX3_FLASH2_SNN, CyFalse);//CyU3PSpiSetSsnLine (CyFalse);
     status = CyU3PSpiTransmitWords (location, 1);
-    CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
-
+    CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine (CyTrue);
     if (status != CY_U3P_SUCCESS)
-        return status;
+        return status;*/
+
+	//write byte
+	preamble.length    = 1;
+	preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+	preamble.ctrlMask  = 0x0000;
+	sc_brdg_data[0] = 0x40; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 0,
+	if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+    ///CyU3PThreadSleep (1);
+
+
+	//write-read SPI bytes using using I2C-SPI bridge
+	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+	preamble.length    = 2;
+	preamble.buffer[0] = I2C_Addr; //write h70;
+	preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+	preamble.ctrlMask  = 0x0000;
+
+	if( CyU3PI2cTransmitBytes (&preamble, &location[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+	CyU3PThreadSleep (1);
+
+	//write byte
+	preamble.length    = 1;
+	preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+	preamble.ctrlMask  = 0x0000;
+	sc_brdg_data[0] = 0x41; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 1,
+	if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+	///CyU3PThreadSleep (1);
 
     if (isErase)
     {
@@ -243,25 +508,92 @@ CyU3PReturnStatus_t FlashSpiEraseSector(CyBool_t isErase, uint8_t sector)
         location[2] = (temp >> 8) & 0xFF;
         location[3] = temp & 0xFF;
 
-        CyU3PGpioSetValue (FX3_SPI_AS_SS, CyFalse);
+        /*CyU3PGpioSetValue (FX3_FLASH2_SNN, CyFalse);//CyU3PSpiSetSsnLine (CyFalse);
         status = CyU3PSpiTransmitWords (location, 4);
-        CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
-    }
+        CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine (CyTrue);*/
 
-    uint32_t start_ticks = CyU3PGetTime();
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x40; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 0,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+        ///CyU3PThreadSleep (1);
+
+
+    	//write-read SPI bytes using using I2C-SPI bridge
+    	I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+    	preamble.length    = 2;
+    	preamble.buffer[0] = I2C_Addr; //write h70;
+    	preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+    	preamble.ctrlMask  = 0x0000;
+
+    	if( CyU3PI2cTransmitBytes (&preamble, &location[0], 4, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+    	CyU3PThreadSleep (1);
+
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x41; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 1,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+    	///CyU3PThreadSleep (1);
+    }
 
     location[0] = 0x05; /* RDSTATUS */
     do {
-		if ((CyU3PGetTime()- start_ticks) > FLASH_STATUS_TIMEOUT)
-		{
-			status = CY_U3P_ERROR_TIMEOUT;
-			return status;
-		}
-
-    	CyU3PGpioSetValue (FX3_SPI_AS_SS, CyFalse);
+    	/*CyU3PGpioSetValue (FX3_FLASH2_SNN, CyFalse);//CyU3PSpiSetSsnLine (CyFalse);
         status = CyU3PSpiTransmitWords (location, 1);
         status = CyU3PSpiReceiveWords(rdBuf, 1);
-        CyU3PGpioSetValue (FX3_SPI_AS_SS, CyTrue);
+        CyU3PGpioSetValue (FX3_FLASH2_SNN, CyTrue);//CyU3PSpiSetSsnLine (CyTrue);*/
+
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x40; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 0,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+        ///CyU3PThreadSleep (1);
+
+
+		//write/read SPI bytes using using I2C-SPI bridge
+		I2C_Addr = 0x50;// SC18IS602B_I2C_ADDR
+
+		preamble.length    = 2;
+		preamble.buffer[0] = I2C_Addr; //write h70;
+		preamble.buffer[1] = BRDG_SPI_DUMMY_SS;// ADF_SS dummy //0x01; //FLASH SS
+		preamble.ctrlMask  = 0x0000;
+
+		sc_brdg_data[0] = location[0];
+		sc_brdg_data[1] = 0; //dummy byte for read
+
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1 + 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+		CyU3PThreadSleep (1);
+
+		//read received SPI bytes from I2C-SPI bridge buffer
+		I2C_Addr |= 1 << 0;	//read addr
+		preamble.length    = 1;
+		preamble.buffer[0] = I2C_Addr;
+		preamble.ctrlMask  = 0x0000;
+
+		if( CyU3PI2cReceiveBytes (&preamble, &sc_brdg_data[0], 1 + 1, 0)  != CY_U3P_SUCCESS)  cmd_errors++;
+
+		CyU3PThreadSleep (1);
+
+		rdBuf[0] = sc_brdg_data[1];
+
+		//write byte
+		preamble.length    = 1;
+		preamble.buffer[0] = 0xDA; //MAX7322_I2C_ADDR
+		preamble.ctrlMask  = 0x0000;
+		sc_brdg_data[0] = 0x41; //NCONFIG = 1, AS_SW = 0,.. EXP_AS_SS = 1,
+		if( CyU3PI2cTransmitBytes (&preamble, &sc_brdg_data[0], 1, 0) != CY_U3P_SUCCESS)  cmd_errors++;
+
+		///CyU3PThreadSleep (1);
 
     } while(rdBuf[0] & 1);
 

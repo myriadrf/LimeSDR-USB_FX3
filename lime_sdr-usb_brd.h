@@ -15,7 +15,7 @@
 
 //get info
 #define DEV_TYPE			LMS_DEV_LIMESDR_USB
-#define HW_VER				4 //LimeSDR-USB 1.4
+#define HW_VER				2 //LimeSDR-USB 1.2
 #define EXP_BOARD			EXP_BOARD_UNSUPPORTED
 
 //I2C devices
@@ -36,6 +36,9 @@
 #define FX3_SPI_FLASH_SS	54
 #define FX3_SPI_AS_SS		57
 #define BRDG_INT			45
+
+#define FX3_LED_R	27
+#define FX3_LED_G	26
 
 //BRD_SPI map
 #define FPGA_SPI_REG_LMS1_LMS2_CTRL  0x13
