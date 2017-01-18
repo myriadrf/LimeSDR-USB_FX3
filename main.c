@@ -2,9 +2,9 @@
  * ----------------------------------------------------------------------------
  * FILE:	main.c
  * DESCRIPTION:	LimeSDR-USB firmware main file
- * DATE:	2016.11.04
+ * DATE:	2017.01.18
  * AUTHOR(s):	Lime Microsystems
- * REVISION: v0r3
+ * REVISION: v0r4
  * ----------------------------------------------------------------------------
  */
 
@@ -36,7 +36,7 @@
 #include "Si5351_config_map.h"
 
 //GET_INFO FW_VER
-#define FW_VER				6
+#define FW_VER				7
 
 #define sbi(p,n) ((p) |= (1UL << (n)))
 #define cbi(p,n) ((p) &= ~(1 << (n)))
@@ -225,7 +225,6 @@ CyFxSlFifoApplnStart (void)
 	dmaCfg.size  = USB_BULK_STREAM_DMA_BUF_SIZE*size; //DMA size is set based on the USB speed.
     dmaCfg.count = USB_BULK_CONTROL_DMA_BUF_COUNT;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
-    /* Enabling the callback for produce event. */
     dmaCfg.notification = 0;
     dmaCfg.cb = NULL;
     dmaCfg.prodHeader = 0;
@@ -277,7 +276,6 @@ CyFxSlFifoApplnStart (void)
     dmaCfg.size  = size;
     dmaCfg.count = USB_BULK_CONTROL_DMA_BUF_COUNT;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
-    /* Enabling the callback for produce event. */
     dmaCfg.notification = 0;
     dmaCfg.cb = NULL;
     dmaCfg.prodHeader = 0;
@@ -327,8 +325,7 @@ CyFxSlFifoApplnStart (void)
 /* This function stops the slave FIFO loop application. This shall be called
  * whenever a RESET or DISCONNECT event is received from the USB host. The
  * endpoints are disabled and the DMA pipe is destroyed by this function. */
-void
-CyFxSlFifoApplnStop (void)
+void CyFxSlFifoApplnStop (void)
 {
 	CyU3PEpConfig_t epCfg;
 	CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
@@ -346,6 +343,10 @@ CyFxSlFifoApplnStop (void)
 	CyU3PDmaChannelDestroy (&USB_BULK_STREAM_DMA_PtoU_Handle);
 	CyU3PDmaChannelDestroy (&USB_BULK_CONTROL_DMA_UtoP_Handle);
 	CyU3PDmaChannelDestroy (&USB_BULK_CONTROL_DMA_PtoU_Handle);
+
+    /* Disable endpoints. */
+    CyU3PMemSet ((uint8_t *)&epCfg, 0, sizeof (epCfg));
+    epCfg.enable = CyFalse;
 
 	/* Producer endpoint configuration. */
 	apiRetStatus = CyU3PSetEpConfig(USB_BULK_STREAM_EP_PROD, &epCfg);

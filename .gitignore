@@ -1,0 +1,13 @@
+#---------------
+# temporary files
+#--------------
+*.o
+*.d
+*.lst
+
+#---------------
+# other files
+#--------------
+.metadata
+/Release
+/Release
