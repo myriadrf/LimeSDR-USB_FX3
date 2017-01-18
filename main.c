@@ -2,9 +2,9 @@
  * ----------------------------------------------------------------------------
  * FILE:	main.c
  * DESCRIPTION:	LimeSDR-USB firmware main file
- * DATE:	2016.11.04
+ * DATE:	2017.01.18
  * AUTHOR(s):	Lime Microsystems
- * REVISION: v0r3
+ * REVISION: v0r4
  * ----------------------------------------------------------------------------
  */
 
@@ -36,7 +36,7 @@
 #include "Si5351_config_map.h"
 
 //GET_INFO FW_VER
-#define FW_VER				2
+#define FW_VER				3
 
 #define sbi(p,n) ((p) |= (1UL << (n)))
 #define cbi(p,n) ((p) &= ~(1 << (n)))
@@ -224,7 +224,6 @@ void CyFxSlFifoApplnStart (void)
 	dmaCfg.size  = USB_BULK_STREAM_DMA_BUF_SIZE*size; //DMA size is set based on the USB speed.
     dmaCfg.count = USB_BULK_CONTROL_DMA_BUF_COUNT;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
-    /* Enabling the callback for produce event. */
     dmaCfg.notification = 0;
     dmaCfg.cb = NULL;
     dmaCfg.prodHeader = 0;
@@ -276,7 +275,6 @@ void CyFxSlFifoApplnStart (void)
     dmaCfg.size  = size;
     dmaCfg.count = USB_BULK_CONTROL_DMA_BUF_COUNT;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
-    /* Enabling the callback for produce event. */
     dmaCfg.notification = 0;
     dmaCfg.cb = NULL;
     dmaCfg.prodHeader = 0;
@@ -344,6 +342,10 @@ void CyFxSlFifoApplnStop (void)
 	CyU3PDmaChannelDestroy (&USB_BULK_STREAM_DMA_PtoU_Handle);
 	CyU3PDmaChannelDestroy (&USB_BULK_CONTROL_DMA_UtoP_Handle);
 	CyU3PDmaChannelDestroy (&USB_BULK_CONTROL_DMA_PtoU_Handle);
+
+    /* Disable endpoints. */
+    CyU3PMemSet ((uint8_t *)&epCfg, 0, sizeof (epCfg));
+    epCfg.enable = CyFalse;
 
 	/* Producer endpoint configuration. */
 	apiRetStatus = CyU3PSetEpConfig(USB_BULK_STREAM_EP_PROD, &epCfg);
@@ -590,7 +592,7 @@ CyBool_t CyFxSlFifoApplnUSBSetupCB (uint32_t setupdat0, uint32_t setupdat1)
 							LMS_Ctrl_Packet_Tx->Data_field[3 + (block * 4)] = sc_brdg_data[(block * 4) + 3]; //reg data LSB
 						}
 
-						CyU3PThreadSleep (1); ///need some time?
+						CyU3PThreadSleep (1); //need some time?
 						//Wait_till_SC18B20_busy ();
 
 						Modify_BRDSPI16_Reg_bits (FPGA_SPI_REG_LMS1_LMS2_CTRL, LMS1_SS, LMS1_SS, 1); //Disable LMS's SPI
