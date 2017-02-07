@@ -1,1 +1,1 @@
-Myriad-RF LimeSDR-USB v1.4 firmware
+Myriad-RF LimeSDR-USB v1.3 and v1.4 board firmware for Cypress USB 3.0 peripheral controller (FX3)
