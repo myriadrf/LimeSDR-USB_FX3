@@ -36,7 +36,7 @@
 #include "Si5351_config_map.h"
 
 //GET_INFO FW_VER
-#define FW_VER				3
+#define FW_VER				4
 
 #define sbi(p,n) ((p) |= (1UL << (n)))
 #define cbi(p,n) ((p) &= ~(1 << (n)))
@@ -1820,12 +1820,15 @@ void SlFifoAppThread_Entry (uint32_t input)
 
 	Configure_FPGA_from_flash ();
 
+	/* TCXO DAC and LM75 will be configured from NIOS
+
 	//write default TCXO DAC value
 	Control_TCXO_ADF (0, NULL); //set ADF4002 CP to three-state
 	dac_val = 125; //default DAC value
 	Control_TCXO_DAC (1, &dac_val); //enable DAC output, set new val
 
 	Configure_LM75 (); //set LM75 configuration
+	*/
 
 	CyU3PGpioSimpleSetValue (FX3_MCU_BUSY, CyFalse); //FX3 is not busy
 
@@ -1962,7 +1965,7 @@ unsigned char Check_many_blocks (unsigned char block_size)
 }
 
 /**
- *	@brief Function initializes FPGA configuring from FLASH memory by controliing NCONFIG pin
+ *	@brief Function initializes FPGA configuring from FLASH memory by controlling NCONFIG pin
  */
 void Configure_FPGA_from_flash (void)
 {

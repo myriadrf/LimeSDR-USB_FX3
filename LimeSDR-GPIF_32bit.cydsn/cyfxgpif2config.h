@@ -1,6 +1,6 @@
 /*
  * Project Name: LimeSDR-GPIF_32bit.cyfx
- * Time : 10/20/2016 09:08:15
+ * Time : 12/04/2017 11:06:29
  * Device Type: FX3
  * Project Type: GPIF2
  *
@@ -82,7 +82,7 @@ uint8_t CyFxGpifWavedataPosition[]  = {
    GPIF II configuration register values.
  */
 uint32_t CyFxGpifRegValue[]  = {
-    0x800003B8,  /*  CY_U3P_PIB_GPIF_CONFIG */
+    0x800003B0,  /*  CY_U3P_PIB_GPIF_CONFIG */
     0x000010AC,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG */
     0x01070002,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG2 */
     0x00000044,  /*  CY_U3P_PIB_GPIF_AD_CONFIG */
