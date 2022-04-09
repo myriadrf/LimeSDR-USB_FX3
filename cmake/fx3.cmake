@@ -75,12 +75,38 @@ set(CMAKE_CROSSCOMPILING On)
 #
 set(USE_SDK_MAKE On CACHE BOOL "Force set MAKE command to the cs-make on Windows")
 
-message(STATUS "ENV ARMGCC_INSTALL_PATH: $ENV{ARMGCC_INSTALL_PATH}")
-file(TO_CMAKE_PATH $ENV{ARMGCC_INSTALL_PATH} ARMGCC_INSTALL_PATH)
-message(STATUS "ARMGCC_INSTALL_PATH: ${ARMGCC_INSTALL_PATH}")
+# Find or specify FX3 SDK path
+if(DEFINED ENV{FX3_INSTALL_PATH})
+  set(FX3_INSTALL_PATH $ENV{FX3_INSTALL_PATH} CACHE PATH "FX3 SDK directory")
+  file(TO_CMAKE_PATH ${FX3_INSTALL_PATH} FX3_INSTALL_PATH)
+  message(STATUS "FX3_INSTALL_PATH: ${FX3_INSTALL_PATH}")
+else()
+  set(FX3_INSTALL_PATH "" CACHE PATH "FX3 SDK directory")
+endif()
+if(FX3_INSTALL_PATH STREQUAL "")
+  message(FATAL_ERROR "Need to specify FX3 SDK install path")
+endif()
+message(STATUS "FX3 SDK path: " ${FX3_INSTALL_PATH})
 
-file(TO_CMAKE_PATH $ENV{FX3_INSTALL_PATH} FX3_INSTALL_PATH)
-message(STATUS "FX3_INSTALL_PATH: ${FX3_INSTALL_PATH}")
+# Find or specify GCC compiler path
+if(DEFINED ENV{ARMGCC_INSTALL_PATH})
+  set(ARMGCC_INSTALL_PATH $ENV{ARMGCC_INSTALL_PATH} CACHE PATH "FX3 Arm GCC dir")
+  file(TO_CMAKE_PATH ARMGCC_INSTALL_PATH ARMGCC_INSTALL_PATH)
+  message(STATUS "ARMGCC_INSTALL_PATH: ${ARMGCC_INSTALL_PATH}")
+else()
+  set(ARMGCC_INSTALL_PATH "" CACHE PATH "FX3 Arm GCC dir")
+endif()
+
+if(ARMGCC_INSTALL_PATH STREQUAL "")
+  message(FATAL_ERROR "Need to specify FX3 Arm GCC compilator path")
+endif()
+message(STATUS "ARM GCC path: " ${ARMGCC_INSTALL_PATH})
+
+if(DEFINED ENV{ARMGCC_VERSION})
+  set(ARMGCC_VERSION $ENV{ARMGCC_VERSION} CACHE STRING "GCC verions to use")
+else()
+  set(ARMGCC_VERSION 4.8.1 CACHE STRING "GCC verions to use")
+endif()
 
 if (WIN32)
   set(TOOL_EXE ".exe")
@@ -196,7 +222,7 @@ set(FX3_LIBS
 set(FX3_C_LIBS
   "${ARMGCC_INSTALL_PATH}/arm-none-eabi/lib/libm.a"
   "${ARMGCC_INSTALL_PATH}/arm-none-eabi/lib/libc.a"
-  "${ARMGCC_INSTALL_PATH}/lib/gcc/arm-none-eabi/$ENV{ARMGCC_VERSION}/libgcc.a"
+  "${ARMGCC_INSTALL_PATH}/lib/gcc/arm-none-eabi/${ARMGCC_VERSION}/libgcc.a"
   )
 
 # STD C++ Library
